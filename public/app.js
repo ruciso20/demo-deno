@@ -16,3 +16,4 @@ document.getElementById("loadUsers").addEventListener("click", async () => {
     alert("Hubo un error: " + err.message);
   }
 });
+
