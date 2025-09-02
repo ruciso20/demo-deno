@@ -1,132 +1,266 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Gestión de Usuarios y Proyectos</title>
-  <link rel="stylesheet" href="/style.css">
+  <!-- IMPORTANTE: el archivo real es styles.css -->
+  <link rel="stylesheet" href="/styles.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 </head>
-
 <body>
-  <div class="container">
-    <h1>Gestión de Usuarios y Proyectos</h1>
+  <header class="topbar">
+    <div class="topbar__wrap">
+      <h1 class="brand">Gestión de Usuarios y Proyectos</h1>
+      <nav class="topbar__nav">
+        <a href="#usuarios">Usuarios</a>
+        <a href="#proyectos">Proyectos</a>
+        <a href="#asignaciones">Asignaciones</a>
+      </nav>
+    </div>
+  </header>
 
-    <!-- Crear Usuario -->
-    <section>
-      <h2>Crear Usuario</h2>
-      <form id="userForm">
-        <input type="text" id="name" placeholder="Nombre" required>
-        <input type="email" id="email" placeholder="Email" required>
-        <input type="text" id="role" placeholder="Rol (ej: dev, admin)">
-        <button type="submit">Crear</button>
-      </form>
+  <main class="container">
+    <!-- Panel de creación -->
+    <section class="panel panel--grid">
+      <div class="card card--form">
+        <h2 id="usuarios">Crear Usuario</h2>
+        <form id="userForm" class="form">
+          <div class="fields">
+            <input type="text" id="name" placeholder="Nombre" required />
+            <input type="email" id="email" placeholder="Email" required />
+            <input type="text" id="role" placeholder="Rol (ej: dev, admin)" />
+          </div>
+          <button type="submit" class="btn btn--primary">Crear</button>
+        </form>
+      </div>
+
+      <div class="card card--form">
+        <h2 id="proyectos">Crear Proyecto</h2>
+        <form id="projectForm" class="form">
+          <div class="fields">
+            <input type="text" id="projectName" placeholder="Nombre del proyecto" required />
+            <input type="text" id="projectDesc" placeholder="Descripción" />
+          </div>
+          <button type="submit" class="btn btn--primary">Crear Proyecto</button>
+        </form>
+      </div>
     </section>
 
-    <!-- Lista de Usuarios -->
-    <section>
-      <h2>Usuarios</h2>
-      <ul id="usersList"></ul>
+    <!-- Listas en dos columnas -->
+    <section class="grid">
+      <div class="col">
+        <h2>Usuarios</h2>
+        <ul id="usersList" class="list"></ul>
+        
+      </div>
+
+      <div class="col">
+        <h2 id="asignaciones">Asignaciones</h2>
+        <ul id="assignmentsList" class="list"></ul>
+       
+      </div>
     </section>
 
-    <!-- Lista de Asignaciones -->
-    <section>
-      <h2>Asignaciones</h2>
-      <ul id="assignmentsList"></ul>
+    <section class="panel">
+      <h2>Proyectos</h2>
+      <ul id="projectsList" class="list list--grid"></ul>
+      
     </section>
-  </div>
+  </main>
+
+  <footer class="footer">
+    <small>Demo Deno · Sin base de datos · Estados en memoria</small>
+  </footer>
 
   <script>
-    const usersList = document.getElementById("usersList");
-    const assignmentsList = document.getElementById("assignmentsList");
+    // ------- Helpers UI -------
+    const $ = (sel) => document.querySelector(sel);
+    const usersList = $("#usersList");
+    const assignmentsList = $("#assignmentsList");
+    const projectsList = $("#projectsList");
+    const usersEmpty = $("#usersEmpty");
+    const assignmentsEmpty = $("#assignmentsEmpty");
+    const projectsEmpty = $("#projectsEmpty");
 
+    function setEmptyState(listEl, emptyEl) {
+      const isEmpty = !listEl.children.length;
+      emptyEl.classList.toggle("hidden", !isEmpty);
+    }
+
+    // ------- Usuarios -------
     async function loadUsers() {
       const res = await fetch("/users");
       const users = await res.json();
       usersList.innerHTML = "";
 
-      users.forEach(user => {
+      users.forEach((user) => {
         const li = document.createElement("li");
         li.className = "card";
 
-        const info = document.createElement("span");
-        info.textContent = `${user.name} (${user.role}) - ${user.email}`;
+        const info = document.createElement("div");
+        info.className = "stack";
+        info.innerHTML = `
+          <strong>${user.name}</strong>
+          <span class="muted">${user.email}</span>
+          <span class="badge">${user.role || "user"}</span>
+        `;
 
         const actions = document.createElement("div");
         actions.className = "actions";
 
         const assignBtn = document.createElement("button");
+        assignBtn.className = "btn btn--success";
         assignBtn.textContent = "Asignar a Proyecto";
         assignBtn.onclick = async () => {
-          const projectId = prompt("Ingrese ID del proyecto:");
-          if (projectId) {
-            await fetch(`/users/${user.id}/assign/${projectId}`, { method: "POST" });
-            loadAssignments();
+          // Traemos proyectos para elegir
+          const projRes = await fetch("/projects");
+          const projects = await projRes.json();
+          if (!projects.length) {
+            alert("No hay proyectos creados.");
+            return;
           }
+          const choice = prompt(
+            "Ingrese ID del proyecto:\n" +
+              projects.map((p) => `${p.id}: ${p.name}`).join("\n")
+          );
+          if (!choice) return;
+          await fetch(`/users/${user.id}/assign/${choice}`, { method: "POST" });
+          await loadAssignments();
         };
 
         const deleteBtn = document.createElement("button");
+        deleteBtn.className = "btn btn--danger";
         deleteBtn.textContent = "Eliminar";
         deleteBtn.onclick = async () => {
           await fetch(`/users/${user.id}`, { method: "DELETE" });
-          loadUsers();
-          loadAssignments();
+          await loadUsers();
+          await loadAssignments();
         };
 
         actions.append(assignBtn, deleteBtn);
         li.append(info, actions);
         usersList.appendChild(li);
       });
+
+      setEmptyState(usersList, usersEmpty);
     }
 
+    // ------- Asignaciones -------
     async function loadAssignments() {
       const res = await fetch("/assignments");
       const assignments = await res.json();
       assignmentsList.innerHTML = "";
 
-      assignments.forEach(a => {
+      assignments.forEach((a) => {
         const li = document.createElement("li");
         li.className = "card";
 
-        const info = document.createElement("span");
-        info.textContent = `Usuario ${a.userId} → ${a.projectName} [${a.status}]`;
+        const info = document.createElement("div");
+        info.className = "stack";
+        info.innerHTML = `
+          <strong>Usuario ${a.userId}</strong>
+          <span class="badge">${a.projectName}</span>
+          <span class="muted">${a.status}</span>
+        `;
 
         const actions = document.createElement("div");
         actions.className = "actions";
 
         const removeBtn = document.createElement("button");
+        removeBtn.className = "btn";
         removeBtn.textContent = "Remover";
         removeBtn.onclick = async () => {
-          await fetch(`/users/${a.userId}/assign/${a.projectId}`, { method: "DELETE" });
-          loadAssignments();
+          // podés usar el endpoint de assignments o el de users
+          await fetch(`/assignments/${a.userId}/${a.projectId}`, { method: "DELETE" });
+          await loadAssignments();
         };
 
         actions.append(removeBtn);
         li.append(info, actions);
         assignmentsList.appendChild(li);
       });
+
+      setEmptyState(assignmentsList, assignmentsEmpty);
     }
 
-    // Formulario para crear usuario
+    // ------- Proyectos -------
+    async function loadProjects() {
+      const res = await fetch("/projects");
+      const projects = await res.json();
+      projectsList.innerHTML = "";
+
+      projects.forEach((p) => {
+        const li = document.createElement("li");
+        li.className = "card card--project";
+
+        const info = document.createElement("div");
+        info.className = "stack";
+        info.innerHTML = `
+          <strong>${p.name}</strong>
+          <span class="muted">${p.description || "Sin descripción"}</span>
+          <span class="chip">ID: ${p.id}</span>
+        `;
+
+        const actions = document.createElement("div");
+        actions.className = "actions";
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.className = "btn btn--danger";
+        deleteBtn.textContent = "Eliminar";
+        deleteBtn.onclick = async () => {
+          await fetch(`/projects/${p.id}`, { method: "DELETE" });
+          await loadProjects();
+          await loadAssignments(); // por si había asignaciones
+        };
+
+        actions.append(deleteBtn);
+        li.append(info, actions);
+        projectsList.appendChild(li);
+      });
+
+      setEmptyState(projectsList, projectsEmpty);
+    }
+
+    // ------- Formularios -------
     document.getElementById("userForm").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const name = document.getElementById("name").value;
-      const email = document.getElementById("email").value;
-      const role = document.getElementById("role").value;
+      const name = document.getElementById("name").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const role = document.getElementById("role").value.trim();
 
+      if (!name || !email) return;
       await fetch("/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, role })
+        body: JSON.stringify({ name, email, role }),
       });
 
       e.target.reset();
-      loadUsers();
+      await loadUsers();
     });
 
-    // Cargar datos al inicio
-    loadUsers();
-    loadAssignments();
+    document.getElementById("projectForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const name = document.getElementById("projectName").value.trim();
+      const desc = document.getElementById("projectDesc").value.trim();
+
+      if (!name) return;
+      await fetch("/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, description: desc }),
+      });
+
+      e.target.reset();
+      await loadProjects();
+    });
+
+    // ------- Init -------
+    (async function init() {
+      await loadUsers();
+      await loadProjects();
+      await loadAssignments();
+    })();
   </script>
 </body>
-
 </html>

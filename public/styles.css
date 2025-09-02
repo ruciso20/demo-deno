@@ -1,77 +1,135 @@
+:root{
+  --bg: #0b1220;
+  --card: #111a2b;
+  --muted: #9aa7b2;
+  --text: #e9eef2;
+  --brand: #61dafb;
+  --primary: #4f8cff;
+  --success: #2ecc71;
+  --danger: #ff5c5c;
+  --chip: #1e2a42;
+  --shadow: 0 8px 30px rgba(0,0,0,.35);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+}
+
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   margin: 0;
-  padding: 0;
-  background-color: #f4f6f8;
-  color: #333;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Inter, Arial, sans-serif;
+  background: radial-gradient(1000px 600px at 10% -10%, rgba(79,140,255,.15), transparent),
+              radial-gradient(800px 500px at 90% 10%, rgba(46,213,115,.12), transparent),
+              var(--bg);
+  color: var(--text);
 }
 
+/* Topbar */
+.topbar {
+  position: sticky; top: 0; z-index: 10;
+  backdrop-filter: blur(6px);
+  background: rgba(11,18,32,.6);
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.topbar__wrap {
+  max-width: 1100px; margin: 0 auto; padding: 14px 20px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.brand {
+  font-size: 20px; margin: 0;
+  color: var(--brand);
+  letter-spacing: .3px;
+}
+.topbar__nav a{
+  color: var(--text); text-decoration: none; margin-left: 16px; opacity: .8;
+}
+.topbar__nav a:hover{ opacity: 1; }
+
+/* Layout */
 .container {
-  max-width: 900px;
-  margin: 30px auto;
-  padding: 0 20px;
+  max-width: 1100px;
+  margin: 24px auto;
+  padding: 0 20px 60px;
 }
 
-h1,
-h2 {
-  color: #222;
+.panel { margin: 16px 0 24px; }
+.panel--grid{
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 16px;
 }
 
-form input,
-form button {
-  padding: 8px;
-  margin: 5px 5px 5px 0;
-  border-radius: 5px;
-  border: 1px solid #ccc;
+.grid{
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 16px;
+  align-items: start;
+}
+.col h2 { margin-top: 12px; }
+
+/* Cards */
+.card{
+  background: var(--card);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: var(--shadow);
+}
+.card--form{ padding: 18px; }
+.card--project .chip{ margin-top: 6px; }
+
+/* Typography helpers */
+.stack{ display: grid; gap: 4px; }
+.muted{ color: var(--muted); font-size: 13px; }
+.badge{
+  display: inline-block;
+  padding: 4px 8px;
+  font-size: 12px;
+  border-radius: 999px;
+  background: #182235;
+  color: #cde6ff;
+  border: 1px solid rgba(255,255,255,.08);
+}
+.chip{
+  display: inline-block;
+  padding: 4px 8px;
+  font-size: 12px;
+  border-radius: 8px;
+  background: var(--chip);
+  color: #cbd6dd;
 }
 
-form button {
-  background-color: #007acc;
-  color: white;
-  border: none;
-  cursor: pointer;
-  transition: 0.2s;
-}
+/* Lists */
+.list{ list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 12px; }
+.list--grid{ grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
 
-form button:hover {
-  background-color: #005fa3;
+/* Forms */
+.form .fields{
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
 }
-
-ul {
-  list-style: none;
-  padding: 0;
-}
-
-.card {
-  background-color: white;
-  margin: 10px 0;
-  padding: 15px;
+.form input{
+  background: #0f1726;
+  border: 1px solid rgba(255,255,255,.08);
+  color: var(--text);
+  padding: 10px 12px;
   border-radius: 10px;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  outline: none;
 }
+.form input::placeholder{ color: #7f8b95; }
 
-.actions button {
-  margin-left: 5px;
-  padding: 5px 10px;
-  border-radius: 5px;
+/* Buttons */
+.btn{
+  appearance: none;
+  border: 1px solid rgba(255,255,255,.08);
+  background: #162138;
+  color: var(--text);
+  padding: 8px 12px;
+  border-radius: 10px;
   cursor: pointer;
-  border: none;
-  transition: 0.2s;
-}
-
-.actions button:hover {
-  opacity: 0.8;
-}
-
-.actions button:first-child {
-  background-color: #28a745;
-  color: white;
-}
-
-.actions button:last-child {
-  background-color: #dc3545;
-  color: white;
+  transition: transform .06s ease, box-shadow .2s ease, opa
 }
