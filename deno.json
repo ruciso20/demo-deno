@@ -15,6 +15,6 @@
     "singleQuote": true
   },
   "tasks": {
-    "dev": "deno run --allow-net main.ts"
+    "dev": "deno run --allow-net --allow-read main.ts"
   }
 }
