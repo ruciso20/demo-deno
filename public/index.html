@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Gestión de Usuarios y Proyectos</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+  <div class="container">
+    <h1>Gestión de Usuarios y Proyectos</h1>
+
+    <!-- Crear Usuario -->
+    <section>
+      <h2>Crear Usuario</h2>
+      <form id="userForm">
+        <input type="text" id="name" placeholder="Nombre" required>
+        <input type="email" id="email" placeholder="Email" required>
+        <input type="text" id="role" placeholder="Rol (ej: dev, admin)">
+        <button type="submit">Crear</button>
+      </form>
+    </section>
+
+    <!-- Lista de Usuarios -->
+    <section>
+      <h2>Usuarios</h2>
+      <ul id="usersList"></ul>
+    </section>
+
+    <!-- Lista de Asignaciones -->
+    <section>
+      <h2>Asignaciones</h2>
+      <ul id="assignmentsList"></ul>
+    </section>
+  </div>
+
+  <script>
+    const usersList = document.getElementById("usersList");
+    const assignmentsList = document.getElementById("assignmentsList");
+
+    async function loadUsers() {
+      const res = await fetch("/users");
+      const users = await res.json();
+      usersList.innerHTML = "";
+
+      users.forEach(user => {
+        const li = document.createElement("li");
+        li.className = "card";
+
+        const info = document.createElement("span");
+        info.textContent = `${user.name} (${user.role}) - ${user.email}`;
+
+        const actions = document.createElement("div");
+        actions.className = "actions";
+
+        const assignBtn = document.createElement("button");
+        assignBtn.textContent = "Asignar a Proyecto";
+        assignBtn.onclick = async () => {
+          const projectId = prompt("Ingrese ID del proyecto:");
+          if (projectId) {
+            await fetch(`/users/${user.id}/assign/${projectId}`, { method: "POST" });
+            loadAssignments();
+          }
+        };
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.textContent = "Eliminar";
+        deleteBtn.onclick = async () => {
+          await fetch(`/users/${user.id}`, { method: "DELETE" });
+          loadUsers();
+          loadAssignments();
+        };
+
+        actions.append(assignBtn, deleteBtn);
+        li.append(info, actions);
+        usersList.appendChild(li);
+      });
+    }
+
+    async function loadAssignments() {
+      const res = await fetch("/assignments");
+      const assignments = await res.json();
+      assignmentsList.innerHTML = "";
+
+      assignments.forEach(a => {
+        const li = document.createElement("li");
+        li.className = "card";
+
+        const info = document.createElement("span");
+        info.textContent = `Usuario ${a.userId} → ${a.projectName} [${a.status}]`;
+
+        const actions = document.createElement("div");
+        actions.className = "actions";
+
+        const removeBtn = document.createElement("button");
+        removeBtn.textContent = "Remover";
+        removeBtn.onclick = async () => {
+          await fetch(`/users/${a.userId}/assign/${a.projectId}`, { method: "DELETE" });
+          loadAssignments();
+        };
+
+        actions.append(removeBtn);
+        li.append(info, actions);
+        assignmentsList.appendChild(li);
+      });
+    }
+
+    // Formulario para crear usuario
+    document.getElementById("userForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const name = document.getElementById("name").value;
+      const email = document.getElementById("email").value;
+      const role = document.getElementById("role").value;
+
+      await fetch("/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, role })
+      });
+
+      e.target.reset();
+      loadUsers();
+    });
+
+    // Cargar datos al inicio
+    loadUsers();
+    loadAssignments();
+  </script>
+</body>
+
+</html>
